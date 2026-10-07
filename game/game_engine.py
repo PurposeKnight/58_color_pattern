@@ -64,6 +64,9 @@ class GameEngine:
         self.player_lit_start = 0
         self.player_flash_duration = 150
 
+        self.turn_start_time = 0
+        self.turn_time_limit = 5000
+
         self.font_title = pygame.font.SysFont(None, 40)
         self.font_medium = pygame.font.SysFont(None, 28)
 
@@ -117,6 +120,11 @@ class GameEngine:
                         self.play_sound(next_id)
                     else:
                         self.state = "PLAYER_TURN"
+                        self.turn_start_time = now
+                        self.turn_time_limit = max(2500, 4000 + len(self.sequence) * 1200)
+        elif self.state == "PLAYER_TURN":
+            if now - self.turn_start_time >= self.turn_time_limit:
+                self.state = "GAME_OVER"
 
     def handle_event(self, event):
         if self.state == "GAME_OVER":
@@ -169,6 +177,27 @@ class GameEngine:
         status_color = (190, 195, 205) if self.state == "WATCH" else (80, 240, 130)
         status_surf = self.font_medium.render(status_text, True, status_color)
         screen.blit(status_surf, (self.width // 2 - status_surf.get_width() // 2, 95))
+
+        if self.state == "PLAYER_TURN":
+            elapsed = pygame.time.get_ticks() - self.turn_start_time
+            remaining_ratio = max(0.0, 1.0 - (elapsed / self.turn_time_limit))
+
+            bar_w, bar_h = 280, 10
+            bar_x = (self.width - bar_w) // 2
+            bar_y = 126
+
+            pygame.draw.rect(screen, (50, 55, 65), (bar_x, bar_y, bar_w, bar_h), border_radius=5)
+
+            if remaining_ratio > 0.5:
+                bar_color = (80, 240, 130)
+            elif remaining_ratio > 0.2:
+                bar_color = (255, 200, 50)
+            else:
+                bar_color = (240, 70, 70)
+
+            fill_w = int(bar_w * remaining_ratio)
+            if fill_w > 0:
+                pygame.draw.rect(screen, bar_color, (bar_x, bar_y, fill_w, bar_h), border_radius=5)
 
         for btn in self.buttons:
             btn.render(screen)
