@@ -44,7 +44,11 @@ class GameEngine:
         new_color = random.randint(0, 3)
 
         self.sequence.append(new_color)
-        
+
+        round_num = len(self.sequence)
+        self.flash_duration = max(150, 450 - (round_num - 1) * 35)
+        self.pause_duration = max(60, 200 - (round_num - 1) * 15)
+
         self.player_input.clear()
         self.state = "WATCH"
         self.showing_step = 0
